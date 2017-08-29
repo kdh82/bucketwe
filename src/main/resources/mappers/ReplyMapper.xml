@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dgit.persistence.ReplyDAO">
+	<resultMap type="ReplyVO" id="ReplyResult">
+		<id property="rno" column="rno"/>
+		<result property="replyText" column="reply_text"/>
+		<result property="rregDate" column="rreg_date"/>
+		<result property="bno" column="bno"/>
+		<result property="id" column="id"/>
+	</resultMap>
+	
+	<select id="list" resultType="ReplyVO" resultMap="ReplyResult">
+		select * from reply where bno =#{bno} order by rno desc
+	</select>
+	<insert id="create" parameterType="ReplyVO">
+		insert into reply (reply_text, bno, id) values(#{replyText}, #{bno}, #{id})
+		
+	</insert>
+	<update id="update">
+		update reply set reply_text=#{replyText} where rno=#{rno}
+	</update>
+	<delete id="delete">
+		delete from reply where rno=#{rno}
+	</delete>
+	<select id="listPage" resultType="ReplyVO" resultMap="ReplyResult">
+		select * from reply where bno = #{bno}
+		order by rno desc 
+		limit #{cri.pageStart}, #{cri.perPageNum}
+	</select>
+	<select id="count" resultType="int">
+		select count(bno) from reply where bno =#{bno}
+	</select>
+	<select id="getBno" resultType="int">
+		select bno from reply where rno=#{rno}
+	</select>
+	<select id="read" resultType="ReplyVO" resultMap="ReplyResult">
+		select * from reply where rno=#{rno}
+	</select>
+</mapper>

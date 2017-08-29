@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dgit.mapper.boardMapper">
+	<resultMap type="BoardVO" id="BoardResult">
+		<id property="bno" column="bno"/>
+		<result property="title" column="title"/>
+		<result property="category" column="category"/>
+		<result property="content" column="content"/>
+		<result property="startDate" column="start_date"/>
+		<result property="endDate" column="end_date"/>
+		<result property="bregDate" column="breg_date"/>
+		<result property="bcnt" column="bcnt"/>
+		<result property="replyCnt" column="reply_cnt"/>
+		<result property="id" column="id"/>
+	</resultMap>
+	
+	<insert id="create" parameterType="BoardVO" >
+INSERT INTO board(title, category, content, start_date, end_date, breg_date, bcnt, reply_cnt, id)
+VALUES(#{title}, #{category}, #{content}, #{startDate}, #{endDate}, #{bregDate}, #{bcnt}, #{replyCnt}, #{id});
+	</insert>
+	<select id="listAll" resultType="BoardVO" resultMap="BoardResult">
+		select * from board where bno>0 order by bno desc;
+	</select>
+	<update id="update" parameterType="BoardVO">
+		UPDATE board SET title=#{title}, category=#{category}, content=#{content}, start_date=#{startDate}, end_date=#{endDate}, bcnt=#{bcnt},
+		reply_cnt=#{replyCnt}, id=#{id} where bno=#{bno}
+	</update>	
+	<delete id="delete">
+		DELETE FROM board WHERE bno=#{bno}		
+	</delete>
+	<select id="read" resultType="BoardVO" resultMap="BoardResult">
+		select * from board where bno=#{bno}
+	</select>
+	<select id="listPage" resultType="BoardVO" resultMap="BoardResult">
+	select * from board
+		where bno=>0
+		order by bno desc
+		limit #{page}, 10
+	<!-- select * from board where bno >0 order by bno desc,breg_date desc limit #{page}, 10  -->
+	</select>
+	<select id="listCriteria" resultType="BoardVO" resultMap="BoardResult">
+		select * from board where bno>0 order by bno desc, breg_date desc limit #{pageStart}, #{perPageNum}
+	</select>
+		<sql id="search">
+		<if test="searchType != null">
+			<if test="searchType == 't'.toString()">
+				where title like CONCAT('%',#{keyword},'%')
+			</if>
+			<if test="searchType == 'c'.toString()">
+				where category like CONCAT('%',#{keyword},'%')
+			</if>
+<!-- 			<if test="searchType == 'i'.toString()">
+				where id like CONCAT('%',#{keyword},'%')
+			</if>
+			<if test="searchType == 'tc'.toString()">
+				where title like CONCAT('%',#{keyword},'%') or content like CONCAT('%',#{keyword},'%')
+			</if>
+			<if test="searchType == 'ci'.toString()">
+				where content like CONCAT('%',#{keyword},'%') or id like CONCAT('%',#{keyword},'%')
+			</if>
+			<if test="searchType == 'tci'.toString()">
+				where title like CONCAT('%',#{keyword},'%')
+					 or content like CONCAT('%',#{keyword},'%')
+					 or id like CONCAT('%',#{keyword},'%')
+			</if> -->
+		</if>
+	</sql>
+	<select id="listSearch" resultType="BoardVO" resultMap="BoardResult">
+		SELECT *  FROM board
+		<include refid="search"/> 
+		order by bno desc, breg_date desc limit #{pageStart}, #{perPageNum}
+	</select>
+	<select id="totalCount" resultType="int">
+		select count(bno) from board
+	</select>
+	<select id="searchCount" resultType="int">
+		select count(bno) from board  
+	<include refid="search"/>
+	</select>
+	<update id="updateReplyCnt">
+		update board set reply_cnt = reply_cnt + #{amount} where bno = #{bno}
+	</update>
+	<insert id="addAttach">
+		insert into attach(fullname, bno) values (#{fullname}, LAST_INSERT_ID())
+	</insert>
+	<insert id="addAttachByBno">
+		insert into attach(fullname, bno) values (#{fullname}, #{bno})
+	</insert>
+	<select id="readAttach" resultType="String">
+		select * from attach where bno=#{bno}
+	</select>
+	<delete id="deleteAttach">
+		delete from attach where fullname like#{fullname}
+	</delete>
+	<delete id="deleteAttachByFullName">
+   		delete from attach where bno=#{bno} and fullname=#{fullname}
+   </delete>
+   
+   <delete id="deleteAttachByBno">
+   		delete from attach where bno=#{bno}
+   </delete>
+   
+   <select id="getAttach" resultType="string">
+       select fullname from attach where bno=#{bno}
+   </select>
+	<select id="toptenrank" resultMap="BoardResult">   <!-- 조회수 순위 -->
+		select bno, bcnt, category, title,(select count(*)+1 from board where bcnt > buc.bcnt) as rank 
+		from board as buc order by rank limit 0, 10;
+	</select>
+	<select id="replyrank" resultMap="BoardResult"> <!-- 댓글수 순위 -->
+		select bno, reply_cnt, category,title,(select count(*)+1 from board where reply_cnt > buc.reply_cnt) as rank 
+		from board as buc order by rank limit 0, 10;
+	</select>
+</mapper>
+
+
